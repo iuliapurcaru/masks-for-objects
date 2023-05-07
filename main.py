@@ -35,8 +35,9 @@ def create_mask(index):
     upper_color = np.array([130, 255, 255])
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
-    output = cv2.bitwise_and(img, img, mask=mask)
-    cv2.imwrite("resources/masks/mask-" + str(index) + ".jpeg", output)
+    result = cv2.bitwise_and(img, img, mask=mask)
+    cv2.imwrite("resources/masks/mask-" + str(index) + ".jpeg", result)
+
 
 # converting mask to YUV
 
@@ -44,8 +45,9 @@ def convert_yuv(index):
     img = cv2.imread("resources/crops/crop-" + str(index) + ".jpeg")
 
     img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
-    y, u, v = cv2.split(img_yuv)
+    cv2.imwrite("resources/crops_YUV/crop-yuv-" + str(index) + ".jpeg", img_yuv)
 
+    y, u, v = cv2.split(img_yuv)
     lut_u = np.array([[[i, 255-i, 0] for i in range(256)]], dtype=np.uint8)
     lut_v = np.array([[[0, 255-i, i] for i in range(256)]], dtype=np.uint8)
     y = cv2.cvtColor(y, cv2.COLOR_GRAY2BGR)
@@ -57,13 +59,16 @@ def convert_yuv(index):
 
     result = np.vstack([img, y, u_mapped, v_mapped])
 
-    cv2.imwrite("resources/crops_YUV/crop-yuv-" + str(index) + ".jpeg", result)
+    cv2.imwrite("resources/crops_YUV/crop-yuv-channels-" + str(index) + ".jpeg", result)
+
+
+# making transparent mask
 
 def transparent_mask(index):
     img = cv2.imread("resources/masks/mask-" + str(index) + ".jpeg")
 
     img_transparent = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    _,alpha = cv2.threshold(img_transparent, 0, 255, cv2.THRESH_BINARY)
+    _, alpha = cv2.threshold(img_transparent, 2, 255, cv2.THRESH_BINARY)
 
     b, g, r = cv2.split(img)
     rgba = [b, g, r, alpha]
@@ -72,7 +77,7 @@ def transparent_mask(index):
     cv2.imwrite("resources/masks/mask-" + str(index) + ".png", img_transparent)
 
 
-for i in range(3):  # works the images (0, 1 and 2)
+for i in range(3):  # works for images 0, 1 and 2
     crop_image(i)
     create_mask(i)
     convert_yuv(i)
